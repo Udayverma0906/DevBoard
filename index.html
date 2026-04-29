@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevBoard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="icon" type="image/png" href="/assets/images/icon.png" />
+</head>
+<body>
+
+  <!-- Create Issue Modal -->
+  <div class="overlay" id="overlay">
+    <div class="modal" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-head">
+        <span class="modal-title" id="modalTitle">Create issue</span>
+        <button class="modal-close" id="modalClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="issueInput">Summary</label>
+        <input id="issueInput" placeholder="What needs to be done?" autocomplete="off" />
+
+        <label class="field-label" for="issueDescription">Description <span class="field-optional">(optional)</span></label>
+        <textarea id="issueDescription" placeholder="Describe the mission..."></textarea>
+
+        <label class="field-label">Type</label>
+        <div class="seg-group" id="typePicker">
+          <button class="seg-btn active" data-type="task">
+            <span class="type-dot task"></span>Task
+          </button>
+          <button class="seg-btn" data-type="bug">
+            <span class="type-dot bug"></span>Bug
+          </button>
+          <button class="seg-btn" data-type="enhancement">
+            <span class="type-dot enhancement"></span>Enhancement
+          </button>
+          <button class="seg-btn" data-type="story">
+            <span class="type-dot story"></span>Story
+          </button>
+        </div>
+
+        <label class="field-label">Priority</label>
+        <div class="seg-group" id="priorityPicker">
+          <button class="seg-btn" data-priority="high">
+            <span class="pri-dot high"></span>High
+          </button>
+          <button class="seg-btn active" data-priority="medium">
+            <span class="pri-dot medium"></span>Medium
+          </button>
+          <button class="seg-btn" data-priority="low">
+            <span class="pri-dot low"></span>Low
+          </button>
+        </div>
+
+        <label class="field-label">Due date <span class="field-optional">(optional)</span></label>
+        <input type="date" id="dueDateInput" />
+
+        <label class="field-label">Column</label>
+        <div class="seg-group" id="statusPicker">
+          <button class="seg-btn active" data-status="todo">To Do</button>
+          <button class="seg-btn" data-status="progress">In Progress</button>
+          <button class="seg-btn" data-status="done">Done</button>
+        </div>
+      </div>
+      <div class="modal-foot">
+        <button class="btn-ghost" id="modalCancel">Cancel</button>
+        <button class="btn-primary" id="modalCreate">Create</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Detail / Edit Modal -->
+  <div class="overlay" id="detailOverlay">
+    <div class="modal modal-wide" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div class="modal-head-left">
+          <code class="detail-key-head" id="detailKey"></code>
+          <span class="modal-title">Issue Details</span>
+        </div>
+        <button class="modal-close" id="detailClose" aria-label="Close">✕</button>
+      </div>
+      <div class="modal-body">
+        <label class="field-label" for="detailSummary">Summary</label>
+        <input id="detailSummary" placeholder="Issue summary..." autocomplete="off" />
+
+        <label class="field-label" for="detailDescription">Details <span class="field-optional">(not shown on card)</span></label>
+        <textarea id="detailDescription" placeholder="Add notes, steps, acceptance criteria..."></textarea>
+
+        <label class="field-label">Type</label>
+        <div class="seg-group" id="detailTypePicker">
+          <button class="seg-btn" data-type="task"><span class="type-dot task"></span>Task</button>
+          <button class="seg-btn" data-type="bug"><span class="type-dot bug"></span>Bug</button>
+          <button class="seg-btn" data-type="enhancement"><span class="type-dot enhancement"></span>Enhancement</button>
+          <button class="seg-btn" data-type="story"><span class="type-dot story"></span>Story</button>
+        </div>
+
+        <label class="field-label">Priority</label>
+        <div class="seg-group" id="detailPriorityPicker">
+          <button class="seg-btn" data-priority="high"><span class="pri-dot high"></span>High</button>
+          <button class="seg-btn" data-priority="medium"><span class="pri-dot medium"></span>Medium</button>
+          <button class="seg-btn" data-priority="low"><span class="pri-dot low"></span>Low</button>
+        </div>
+
+        <label class="field-label">Due date <span class="field-optional">(optional)</span></label>
+        <input type="date" id="detailDueDate" />
+
+        <label class="field-label">Column</label>
+        <div class="seg-group" id="detailStatusPicker">
+          <button class="seg-btn" data-status="todo">To Do</button>
+          <button class="seg-btn" data-status="progress">In Progress</button>
+          <button class="seg-btn" data-status="done">Done</button>
+          <button class="seg-btn" data-status="discard">Discarded</button>
+        </div>
+
+        <div class="detail-meta">
+          <span>Created <strong id="detailCreated"></strong></span>
+          <span>Updated <strong id="detailUpdated"></strong></span>
+          <span>Reporter <strong id="detailReporter"></strong></span>
+        </div>
+
+        <!-- Comments / Activity -->
+        <div class="comments-section">
+          <div class="comments-heading">
+            <span class="field-label">Activity</span>
+            <span class="comments-count-badge" id="commentsCount" style="display:none"></span>
+          </div>
+          <div class="comments-list" id="commentsList"></div>
+          <div class="comment-add" id="commentAdd">
+            <span class="comment-avatar" id="selfAvatar">Y</span>
+            <div class="comment-input-area">
+              <div class="comment-required-msg" id="commentRequiredMsg" style="display:none">
+                ⚠ A comment is required before moving to Done
+              </div>
+              <textarea id="commentInput" placeholder="Add a comment… or paste a Google Doc link describing what was done" rows="3"></textarea>
+              <div class="comment-actions" id="commentActions">
+                <button class="btn-primary btn-sm" id="commentSubmit">Save</button>
+                <button class="btn-ghost btn-sm" id="commentDiscard">Discard</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="modal-foot modal-foot-spread">
+        <button class="btn-danger" id="detailDelete">Delete issue</button>
+        <div class="modal-foot-actions">
+          <button class="btn-ghost" id="detailCancel">Cancel</button>
+          <button class="btn-ghost btn-move-back" id="detailMoveBack" style="display:none">↑ Move to In Progress</button>
+          <button class="btn-primary" id="detailSave">Save changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="layout">
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">◈</div>
+        <div>
+          <div class="brand-name">DevBoard</div>
+          <div class="brand-sub">Software Projects</div>
+        </div>
+      </div>
+
+      <div class="sidebar-user">
+        <span class="user-avatar" id="userAvatar">?</span>
+        <div class="user-meta">
+          <span class="user-name" id="userName">Loading…</span>
+          <span class="user-email" id="userEmail"></span>
+        </div>
+        <button class="btn-logout" id="logoutBtn" title="Sign out">↪</button>
+      </div>
+
+      <div class="sidebar-nav">
+        <div class="nav-item nav-overview" id="overviewNav">
+          <span class="nav-view-icon">⊞</span>
+          <span class="nav-proj-name">Overview</span>
+        </div>
+        <div class="nav-label-heading">PROJECTS</div>
+        <div id="projectNav"></div>
+      </div>
+
+      <div class="sidebar-bottom">
+        <form id="newProjectForm" class="new-project-form">
+          <input id="projectInput" placeholder="New project..." autocomplete="off" />
+          <button type="submit" class="add-project-btn" title="Create project">+</button>
+        </form>
+      </div>
+    </aside>
+
+    <!-- Mobile sidebar backdrop -->
+    <div class="backdrop" id="backdrop"></div>
+
+    <!-- Main -->
+    <div class="main">
+
+      <!-- Profile setup banner (hidden once name is saved) -->
+      <div class="profile-banner" id="profileBanner" style="display:none">
+        <span class="profile-banner-msg">👋 Set your name to personalise DevBoard</span>
+        <div class="profile-banner-form">
+          <input id="profileNameInput" placeholder="Your full name…" maxlength="40" autocomplete="off" />
+          <button class="btn-primary btn-sm" id="profileSaveBtn">Save</button>
+        </div>
+      </div>
+
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="hamburger" id="hamburger" aria-label="Toggle menu">☰</button>
+          <div class="project-chip">
+            <div class="chip-icon" id="chipIcon">?</div>
+            <div>
+              <span class="chip-name" id="chipName">Select a project</span>
+              <span class="chip-sub" id="chipSub">Board</span>
+            </div>
+          </div>
+        </div>
+        <button class="btn-create" id="createBtn" style="display:none">+ Create</button>
+      </header>
+
+      <!-- Dashboard view -->
+      <div class="dash-wrap" id="dashWrap" style="display:none"></div>
+
+      <!-- Board view -->
+      <div class="board-wrap" id="boardWrap">
+        <div class="board" id="board">
+          <div class="board-empty">
+            <div class="empty-icon">◈</div>
+            <p class="empty-title">Welcome to DevBoard</p>
+            <p class="empty-sub">Select a project from the sidebar, or create a new one to get started.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="auth.js"></script>
+  <script src="basePopup.js"></script>
+  <script src="baseWidget.js"></script>
+  <script src="baseDashboard.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

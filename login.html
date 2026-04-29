@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>DevBoard — Sign In</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="login.css">
+  <link rel="icon" type="image/png" href="/assets/images/icon.png" />
+</head>
+<body class="login-page">
+
+  <div class="login-wrap">
+    <div class="login-card">
+
+      <div class="login-brand">
+        <div class="brand-logo">◈</div>
+        <div>
+          <div class="brand-name">DevBoard</div>
+          <div class="brand-sub">Software Projects</div>
+        </div>
+      </div>
+
+      <h1 class="login-heading" id="loginHeading">Sign in to your account</h1>
+
+      <div class="login-error" id="loginError" style="display:none"></div>
+
+      <div class="login-form">
+        <div class="login-field" id="nameField" style="display:none">
+          <label class="field-label" for="nameInput">Your name</label>
+          <input id="nameInput" type="text" placeholder="Jane Smith" maxlength="60" autocomplete="name" />
+        </div>
+
+        <div class="login-field">
+          <label class="field-label" for="emailInput">Email</label>
+          <input id="emailInput" type="email" placeholder="you@example.com" autocomplete="email" />
+        </div>
+
+        <div class="login-field">
+          <label class="field-label" for="passwordInput">Password</label>
+          <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" />
+        </div>
+
+        <button class="btn-primary login-submit" id="loginSubmit">Sign In</button>
+
+        <div class="login-toggle">
+          <span id="toggleText">Don't have an account?</span>
+          <button class="login-toggle-btn" id="toggleMode">Create account</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+  <script src="supabase-client.js"></script>
+  <script src="login.js"></script>
+</body>
+</html>
