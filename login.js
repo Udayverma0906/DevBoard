@@ -55,7 +55,7 @@ async function submit() {
       const { error } = await supaClient.auth.signInWithPassword({ email, password });
       if (error) throw error;
     }
-    window.location.replace('/');
+    window.location.replace('DevBoard')  //;
   } catch (err) {
     showError(err.message || 'Something went wrong. Please try again.');
     btn.disabled    = false;
@@ -73,5 +73,5 @@ document.getElementById('toggleMode').addEventListener('click', () => setMode(au
 // Redirect to app if already logged in
 (async () => {
   const { data: { session } } = await supaClient.auth.getSession();
-  if (session) window.location.replace('/');
+  if (session) window.location.replace('DevBoard')  //;
 })();
