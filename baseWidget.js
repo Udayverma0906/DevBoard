@@ -10,14 +10,14 @@ class BaseWidget {
     this.el.id           = `widget-${id}`;
     this.el.dataset.wCols = cols;
 
-    const head = document.createElement('div');
-    head.className   = 'widget-head';
-    head.textContent = title;
+    this._head = document.createElement('div');
+    this._head.className   = 'widget-head';
+    this._head.textContent = title;
 
     this._body = document.createElement('div');
     this._body.className = 'widget-body';
 
-    this.el.append(head, this._body);
+    this.el.append(this._head, this._body);
   }
 
   // Subclasses override — receives data object, returns a DOM Node

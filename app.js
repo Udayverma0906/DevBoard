@@ -260,6 +260,20 @@ function dueStatus(dateStr) {
   return 'ok';
 }
 
+function relTime(ts) {
+  if (!ts) return '';
+  const diff = Date.now() - ts;
+  const m = Math.floor(diff / 60000);
+  if (m < 1)  return 'just now';
+  if (m < 60) return `${m}m ago`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}h ago`;
+  const d = Math.floor(h / 24);
+  if (d === 1) return 'yesterday';
+  if (d < 7)  return `${d}d ago`;
+  return fmtDate(ts);
+}
+
 // ── Dashboard helpers ──────────────────────────────────
 
 function pct(n, total) {
@@ -268,7 +282,7 @@ function pct(n, total) {
 
 function computeDashData() {
   const allTasks = projects.flatMap(p =>
-    p.tasks.map(t => ({ ...t, projectName: p.name, projectColor: p.color }))
+    p.tasks.map(t => ({ ...t, projectName: p.name, projectColor: p.color, projectId: p.id }))
   );
   return {
     projects,
@@ -291,10 +305,10 @@ function computeDashData() {
       story:       allTasks.filter(t => t.type === 'story').length,
     },
     overdue: allTasks
-      .filter(t => t.dueDate && dueStatus(t.dueDate) === 'overdue')
+      .filter(t => t.dueDate && dueStatus(t.dueDate) === 'overdue' && t.status !== 'done' && t.status !== 'discard')
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
     dueSoon: allTasks
-      .filter(t => t.dueDate && dueStatus(t.dueDate) === 'soon')
+      .filter(t => t.dueDate && dueStatus(t.dueDate) === 'soon' && t.status !== 'done' && t.status !== 'discard')
       .sort((a, b) => a.dueDate.localeCompare(b.dueDate)),
     recent: [...allTasks].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 10),
   };
@@ -302,10 +316,18 @@ function computeDashData() {
 
 function buildIssueRow(task, opts = {}) {
   const row = document.createElement('div');
-  row.className = 'issue-row';
+  row.className = 'issue-row' + (opts.clickable ? ' clickable' : '');
 
   const left = document.createElement('div');
   left.className = 'issue-row-left';
+
+  if (task.projectColor) {
+    const dot = document.createElement('span');
+    dot.className = 'issue-row-proj-dot';
+    dot.style.background = task.projectColor;
+    dot.title = task.projectName || '';
+    left.appendChild(dot);
+  }
 
   const key = document.createElement('code');
   key.className   = 'issue-row-key';
@@ -338,13 +360,21 @@ function buildIssueRow(task, opts = {}) {
   right.append(typeTag, priTag);
 
   if (opts.showDate && task.updatedAt) {
+    const statusDot = document.createElement('span');
+    statusDot.className = `issue-row-status-dot ${task.status ?? 'todo'}`;
+    statusDot.title = task.status;
     const dateEl = document.createElement('span');
     dateEl.className   = 'issue-row-date';
-    dateEl.textContent = fmtDate(task.updatedAt);
-    right.appendChild(dateEl);
+    dateEl.textContent = relTime(task.updatedAt);
+    right.append(statusDot, dateEl);
   }
 
   row.append(left, right);
+
+  if (opts.clickable) {
+    row.addEventListener('click', () => openDetailReadOnly(task));
+  }
+
   return row;
 }
 
@@ -883,6 +913,41 @@ function setDetailReadOnly(isDone) {
     .querySelector('.modal').classList.toggle('modal-readonly', isDone);
 }
 
+function openDetailReadOnly(task) {
+  const p = projects.find(proj => proj.id === task.projectId);
+  const fullTask = p?.tasks.find(t => t.id === task.id) ?? task;
+
+  detailTaskId = fullTask.id;
+  detailState  = {
+    type:     fullTask.type     || 'task',
+    priority: fullTask.priority || 'medium',
+    status:   fullTask.status   || 'todo',
+    dueDate:  fullTask.dueDate  || '',
+  };
+
+  document.getElementById('detailKey').textContent       = fullTask.key;
+  document.getElementById('detailSummary').value         = fullTask.text;
+  document.getElementById('detailDescription').value     = fullTask.description || '';
+  document.getElementById('detailDueDate').value         = fullTask.dueDate || '';
+  document.getElementById('detailCreated').textContent   = fullTask.createdAt ? fmtDate(fullTask.createdAt) : '—';
+  document.getElementById('detailUpdated').textContent   = fullTask.updatedAt ? fmtDate(fullTask.updatedAt) : '—';
+  document.getElementById('detailReporter').textContent  = fullTask.createdBy || currentUser.name || '—';
+
+  document.querySelectorAll('#detailTypePicker .seg-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.type === detailState.type));
+  document.querySelectorAll('#detailPriorityPicker .seg-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.priority === detailState.priority));
+  document.querySelectorAll('#detailStatusPicker .seg-btn').forEach(b =>
+    b.classList.toggle('active', b.dataset.status === detailState.status));
+
+  document.getElementById('commentInput').value = '';
+  document.getElementById('commentRequiredMsg').style.display = 'none';
+  renderComments(fullTask);
+  setDetailReadOnly(true);
+  document.getElementById('detailMoveBack').style.display = 'none';
+  detailPopup.open('#detailKey');
+}
+
 function saveDetail() {
   const p = getActive();
   if (!p) return;
@@ -941,12 +1006,14 @@ class TotalIssuesWidget extends BaseWidget {
   render({ total, byStatus }) {
     const wrap = document.createElement('div'); wrap.className = 'w-total';
     const num = document.createElement('div'); num.className = 'w-big-num'; num.textContent = total;
+    const sub = document.createElement('div'); sub.className = 'w-total-sub';
+    sub.textContent = total === 0 ? 'No issues yet' : `${pct(byStatus.done, total)}% complete`;
     const pills = document.createElement('div'); pills.className = 'w-status-pills';
     [{ key: 'todo', label: 'To Do', cls: 'todo' }, { key: 'progress', label: 'In Progress', cls: 'progress' }, { key: 'done', label: 'Done', cls: 'done' }]
       .forEach(({ key, label, cls }) => {
         const p = document.createElement('span'); p.className = `status-pill ${cls}`; p.textContent = `${byStatus[key]} ${label}`; pills.appendChild(p);
       });
-    wrap.append(num, pills); return wrap;
+    wrap.append(num, sub, pills); return wrap;
   }
 }
 
@@ -955,17 +1022,23 @@ class StatusBarWidget extends BaseWidget {
   render({ total, byStatus }) {
     const wrap = document.createElement('div');
     if (total === 0) { wrap.className = 'w-empty'; wrap.textContent = 'No issues yet'; return wrap; }
-    const bar = document.createElement('div'); bar.className = 'dist-bar';
-    [{ key: 'todo', cls: 'todo' }, { key: 'progress', cls: 'progress' }, { key: 'done', cls: 'done' }].forEach(({ key, cls }) => {
-      const seg = document.createElement('div'); seg.className = `dist-seg ${cls}`; seg.style.width = `${pct(byStatus[key], total)}%`; bar.appendChild(seg);
-    });
-    const legend = document.createElement('div'); legend.className = 'dist-legend';
+    wrap.className = 'w-bar-chart';
+    const area = document.createElement('div'); area.className = 'bar-chart-area';
+    const labelsRow = document.createElement('div'); labelsRow.className = 'bar-chart-labels';
+    const maxVal = Math.max(byStatus.todo, byStatus.progress, byStatus.done, 1);
     [{ key: 'todo', label: 'To Do', cls: 'todo' }, { key: 'progress', label: 'In Progress', cls: 'progress' }, { key: 'done', label: 'Done', cls: 'done' }].forEach(({ key, label, cls }) => {
-      const item = document.createElement('div'); item.className = 'dist-legend-item';
-      item.innerHTML = `<span class="dist-dot ${cls}"></span><span class="dist-label">${label}</span><span class="dist-val">${byStatus[key]}</span><span class="dist-pct">${pct(byStatus[key], total)}%</span>`;
-      legend.appendChild(item);
+      const val = byStatus[key];
+      const col = document.createElement('div'); col.className = 'bar-col';
+      const count = document.createElement('span'); count.className = 'bar-count'; count.textContent = val;
+      const pctEl = document.createElement('span'); pctEl.className = 'bar-pct'; pctEl.textContent = `${pct(val, total)}%`;
+      const fill = document.createElement('div'); fill.className = `bar-fill ${cls}`; fill.style.height = `${Math.max(pct(val, maxVal), 2)}%`;
+      col.append(count, pctEl, fill);
+      area.appendChild(col);
+      const lbl = document.createElement('span'); lbl.className = 'bar-label-col'; lbl.textContent = label;
+      labelsRow.appendChild(lbl);
     });
-    wrap.append(bar, legend); return wrap;
+    wrap.append(area, labelsRow);
+    return wrap;
   }
 }
 
@@ -1013,15 +1086,16 @@ class ProjectHealthWidget extends BaseWidget {
     projs.forEach(p => {
       const done = p.tasks.filter(t => t.status === 'done').length;
       const total = p.tasks.length;
+      const donePct = pct(done, total);
       const row = document.createElement('div'); row.className = 'proj-health-row';
       const icon = document.createElement('span'); icon.className = 'proj-health-icon'; icon.style.background = p.color; icon.textContent = initials(p.name);
       const info = document.createElement('div'); info.className = 'proj-health-info';
       const nameRow = document.createElement('div'); nameRow.className = 'proj-health-name-row';
       const name = document.createElement('span'); name.className = 'proj-health-name'; name.textContent = p.name;
-      const count = document.createElement('span'); count.className = 'proj-health-count'; count.textContent = `${done}/${total}`;
+      const count = document.createElement('span'); count.className = 'proj-health-count'; count.textContent = `${done}/${total} · ${donePct}%`;
       nameRow.append(name, count);
       const bar = document.createElement('div'); bar.className = 'proj-health-bar';
-      const fill = document.createElement('div'); fill.className = 'proj-health-fill'; fill.style.width = `${pct(done, total)}%`; fill.style.background = p.color;
+      const fill = document.createElement('div'); fill.className = 'proj-health-fill'; fill.style.width = `${donePct}%`; fill.style.background = p.color;
       bar.appendChild(fill); info.append(nameRow, bar); row.append(icon, info); wrap.appendChild(row);
     });
     return wrap;
@@ -1031,18 +1105,30 @@ class ProjectHealthWidget extends BaseWidget {
 class OverdueWidget extends BaseWidget {
   constructor() { super({ id: 'overdue', title: 'Overdue', cols: 3 }); }
   render({ overdue }) {
+    const count = overdue.length;
+    this._head.innerHTML = count > 0
+      ? `Overdue <span class="widget-head-badge danger">${count}</span>`
+      : 'Overdue';
     const wrap = document.createElement('div');
-    if (overdue.length === 0) { wrap.className = 'w-empty w-good'; wrap.textContent = '✓ No overdue issues'; return wrap; }
-    wrap.className = 'w-issue-list'; overdue.forEach(t => wrap.appendChild(buildIssueRow(t, { showDue: true }))); return wrap;
+    if (count === 0) { wrap.className = 'w-empty w-good'; wrap.textContent = '✓ No overdue issues'; return wrap; }
+    wrap.className = 'w-issue-list';
+    overdue.forEach(t => wrap.appendChild(buildIssueRow(t, { showDue: true, clickable: true })));
+    return wrap;
   }
 }
 
 class DueSoonWidget extends BaseWidget {
   constructor() { super({ id: 'due-soon', title: 'Due Soon', cols: 3 }); }
   render({ dueSoon }) {
+    const count = dueSoon.length;
+    this._head.innerHTML = count > 0
+      ? `Due Soon <span class="widget-head-badge warn">${count}</span>`
+      : 'Due Soon';
     const wrap = document.createElement('div');
-    if (dueSoon.length === 0) { wrap.className = 'w-empty'; wrap.textContent = 'Nothing due in the next 3 days'; return wrap; }
-    wrap.className = 'w-issue-list'; dueSoon.forEach(t => wrap.appendChild(buildIssueRow(t, { showDue: true }))); return wrap;
+    if (count === 0) { wrap.className = 'w-empty'; wrap.textContent = 'Nothing due in the next 3 days'; return wrap; }
+    wrap.className = 'w-issue-list';
+    dueSoon.forEach(t => wrap.appendChild(buildIssueRow(t, { showDue: true, clickable: true })));
+    return wrap;
   }
 }
 
@@ -1051,7 +1137,9 @@ class RecentWidget extends BaseWidget {
   render({ recent }) {
     const wrap = document.createElement('div');
     if (recent.length === 0) { wrap.className = 'w-empty'; wrap.textContent = 'No activity yet'; return wrap; }
-    wrap.className = 'w-recent'; recent.forEach(t => wrap.appendChild(buildIssueRow(t, { showDate: true }))); return wrap;
+    wrap.className = 'w-recent';
+    recent.forEach(t => wrap.appendChild(buildIssueRow(t, { showDate: true, clickable: true })));
+    return wrap;
   }
 }
 

@@ -1264,7 +1264,22 @@ html, body {
   color: var(--text-dim);
   border-bottom: 1px solid var(--border);
   flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+
+.widget-head-badge {
+  font-size: 0.65rem;
+  font-weight: 700;
+  padding: 2px 7px;
+  border-radius: 20px;
+  letter-spacing: 0;
+  text-transform: none;
+}
+.widget-head-badge.danger { background: rgba(226,72,61,0.18);   color: var(--p-high); }
+.widget-head-badge.warn   { background: rgba(226,178,3,0.18);   color: var(--p-med);  }
+.widget-head-badge.info   { background: rgba(87,157,255,0.15);  color: var(--t-task); }
 
 .widget-body {
   padding: 14px 16px;
@@ -1292,6 +1307,12 @@ html, body {
   color: var(--text-hi);
 }
 
+.w-total-sub {
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  margin-top: -4px;
+}
+
 .w-status-pills {
   display: flex;
   flex-wrap: wrap;
@@ -1310,44 +1331,82 @@ html, body {
 .status-pill.progress { background: rgba(87,157,255,0.15);  color: var(--c-prog); }
 .status-pill.done     { background: rgba(34,160,107,0.15);  color: var(--c-done); }
 
-/* ── Widget: Status Distribution ─────────────── */
+/* ── Widget: Status Bar Chart ─────────────────── */
 
-.dist-bar {
-  height: 20px;
-  border-radius: 6px;
-  overflow: hidden;
+.w-bar-chart {
+  flex: 1;
   display: flex;
-  margin-bottom: 14px;
-  background: var(--bg);
-  gap: 2px;
-}
-
-.dist-seg { transition: width 0.4s ease; min-width: 0; }
-.dist-seg.todo     { background: var(--c-todo); }
-.dist-seg.progress { background: var(--c-prog); }
-.dist-seg.done     { background: var(--c-done); }
-
-.dist-legend {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
+  flex-direction: column;
   gap: 8px;
+  min-height: 0;
 }
 
-.dist-legend-item {
+.bar-chart-area {
+  flex: 1;
   display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 0.78rem;
+  align-items: flex-end;
+  gap: 10px;
+  min-height: 0;
+  position: relative;
+  padding-bottom: 1px;
 }
 
-.dist-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
-.dist-dot.todo     { background: var(--c-todo); }
-.dist-dot.progress { background: var(--c-prog); }
-.dist-dot.done     { background: var(--c-done); }
+.bar-chart-area::after {
+  content: '';
+  position: absolute;
+  bottom: 0; left: 0; right: 0;
+  height: 1px;
+  background: rgba(255,255,255,0.08);
+}
 
-.dist-label { color: var(--text-lo); flex: 1; min-width: 0; font-size: 0.75rem; }
-.dist-val   { font-weight: 600; color: var(--text-hi); }
-.dist-pct   { color: var(--text-dim); font-size: 0.7rem; }
+.bar-col {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 3px;
+  height: 100%;
+}
+
+.bar-count {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--text-hi);
+  line-height: 1;
+}
+
+.bar-pct {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  line-height: 1;
+}
+
+.bar-fill {
+  width: 60%;
+  border-radius: 4px 4px 0 0;
+  transition: height 0.5s ease;
+  min-height: 2px;
+}
+
+.bar-fill.todo     { background: var(--c-todo); opacity: 0.75; }
+.bar-fill.progress { background: var(--c-prog); }
+.bar-fill.done     { background: var(--c-done); }
+
+.bar-chart-labels {
+  display: flex;
+  gap: 10px;
+}
+
+.bar-label-col {
+  flex: 1;
+  font-size: 0.7rem;
+  color: var(--text-lo);
+  text-align: center;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── Widget: Breakdown (priority & type) ──────── */
 
@@ -1509,11 +1568,35 @@ html, body {
   gap: 10px;
   padding: 7px 8px;
   border-radius: 6px;
-  transition: background 0.12s;
+  transition: background 0.12s, outline 0.12s;
   min-width: 0;
 }
 
 .issue-row:hover { background: rgba(255,255,255,0.04); }
+
+.issue-row.clickable { cursor: pointer; }
+.issue-row.clickable:hover {
+  background: rgba(255,255,255,0.07);
+  outline: 1px solid rgba(255,255,255,0.07);
+}
+
+.issue-row-proj-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.issue-row-status-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+.issue-row-status-dot.todo     { background: var(--c-todo); opacity: 0.7; }
+.issue-row-status-dot.progress { background: var(--c-prog); }
+.issue-row-status-dot.done     { background: var(--c-done); }
+.issue-row-status-dot.discard  { background: var(--text-dim); }
 
 .issue-row-left {
   display: flex;
