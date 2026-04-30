@@ -741,6 +741,17 @@ html, body {
   border: 1px solid var(--border-md);
 }
 
+.modal-sm {
+  max-width: 340px;
+}
+
+.confirm-msg {
+  margin: 0;
+  font-size: 0.88rem;
+  color: var(--text-lo);
+  line-height: 1.55;
+}
+
 .modal-wide {
   width: 50%;
   max-width: 700px;
@@ -959,6 +970,22 @@ html, body {
 .btn-danger:hover {
   background: rgba(226,72,61,0.12);
   border-color: var(--p-high);
+}
+
+.btn-warn {
+  background: transparent;
+  border: 1px solid rgba(226,178,3,0.35);
+  color: var(--p-med);
+  padding: 7px 14px;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, border-color 0.15s;
+}
+.btn-warn:hover {
+  background: rgba(226,178,3,0.12);
+  border-color: var(--p-med);
 }
 
 .btn-ghost {

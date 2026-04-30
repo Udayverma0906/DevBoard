@@ -498,7 +498,7 @@ function restoreIssue(taskId) {
 }
 
 function removeIssue(taskId) {
-  const p = getActive();
+  const p = projects.find(proj => proj.tasks.some(t => t.id === taskId));
   if (!p) return;
   p.tasks = p.tasks.filter(t => t.id !== taskId);
   dbDeleteTask(taskId).catch(e => console.error('deleteTask:', e));
@@ -1145,8 +1145,9 @@ class RecentWidget extends BaseWidget {
 
 // ── Boot ───────────────────────────────────────────────
 
-const createPopup = new BasePopup('overlay');
-const detailPopup = new BasePopup('detailOverlay');
+const createPopup  = new BasePopup('overlay');
+const detailPopup  = new BasePopup('detailOverlay');
+const confirmPopup = new ConfirmPopup();
 
 dashboard = new BaseDashboard('dashWrap');
 dashboard.register(new TotalIssuesWidget())
@@ -1178,7 +1179,15 @@ dashboard.register(new TotalIssuesWidget())
 
 // ── Event listeners ────────────────────────────────────
 
-document.getElementById('logoutBtn').addEventListener('click', logoutUser);
+document.getElementById('logoutBtn').addEventListener('click', () => {
+  confirmPopup.ask({
+    title:   'Sign out',
+    message: 'Are you sure you want to sign out?',
+    okLabel: 'Sign out',
+    okClass: 'btn-danger',
+    onConfirm: logoutUser,
+  });
+});
 
 document.getElementById('newProjectForm').addEventListener('submit', e => {
   e.preventDefault();
@@ -1191,7 +1200,18 @@ document.getElementById('newProjectForm').addEventListener('submit', e => {
 
 document.getElementById('projectNav').addEventListener('click', e => {
   const delBtn = e.target.closest('.nav-del');
-  if (delBtn) { removeProject(delBtn.dataset.projectId); return; }
+  if (delBtn) {
+    const pid  = delBtn.dataset.projectId;
+    const name = projects.find(p => p.id === pid)?.name ?? 'this project';
+    confirmPopup.ask({
+      title:   'Delete project',
+      message: `Delete "${name}"? All its tasks will be permanently removed.`,
+      okLabel: 'Delete',
+      okClass: 'btn-danger',
+      onConfirm: () => removeProject(pid),
+    });
+    return;
+  }
   const item = e.target.closest('.nav-item');
   if (item) setActive(item.dataset.projectId);
 });
@@ -1231,9 +1251,17 @@ document.getElementById('detailClose').addEventListener('click',  () => detailPo
 document.getElementById('detailCancel').addEventListener('click', () => detailPopup.close());
 document.getElementById('detailSave').addEventListener('click', saveDetail);
 document.getElementById('detailDelete').addEventListener('click', () => {
-  if (detailTaskId === null) return;
-  removeIssue(detailTaskId);
+  const taskId = detailTaskId;
+  if (!taskId) return;
+  const t = projects.flatMap(p => p.tasks).find(t => t.id === taskId);
   detailPopup.close();
+  confirmPopup.ask({
+    title:   'Delete issue',
+    message: `Delete "${t?.text ?? 'this issue'}" permanently? This cannot be undone.`,
+    okLabel: 'Delete',
+    okClass: 'btn-danger',
+    onConfirm: () => removeIssue(taskId),
+  });
 });
 document.getElementById('detailMoveBack').addEventListener('click', () => {
   const p = getActive();
@@ -1295,9 +1323,23 @@ document.getElementById('board').addEventListener('click', e => {
   const { action, taskId, dir } = target.dataset;
 
   if (action === 'delete-issue') {
-    removeIssue(taskId);
+    const t = getActive()?.tasks.find(t => t.id === taskId);
+    confirmPopup.ask({
+      title:   'Delete issue',
+      message: `Delete "${t?.text ?? 'this issue'}" permanently? This cannot be undone.`,
+      okLabel: 'Delete',
+      okClass: 'btn-danger',
+      onConfirm: () => removeIssue(taskId),
+    });
   } else if (action === 'discard-issue') {
-    discardIssue(taskId);
+    const t = getActive()?.tasks.find(t => t.id === taskId);
+    confirmPopup.ask({
+      title:   'Discard issue',
+      message: `Move "${t?.text ?? 'this issue'}" to Discarded?`,
+      okLabel: 'Discard',
+      okClass: 'btn-warn',
+      onConfirm: () => discardIssue(taskId),
+    });
   } else if (action === 'restore-issue') {
     restoreIssue(taskId);
   } else if (action === 'move-issue') {
