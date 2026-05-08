@@ -1268,7 +1268,17 @@ document.getElementById('detailMoveBack').addEventListener('click', () => {
   if (!p || detailTaskId === null) return;
   const task = p.tasks.find(t => t.id === detailTaskId);
   if (!task) return;
-  task.status    = 'progress';
+  // Require comment before moving back to todo
+  if (!(task.comments?.length)) {
+    const msg = document.getElementById('commentRequiredMsg');
+    const ci  = document.getElementById('commentInput');
+    msg.textContent = '⚠ A comment is required before moving back to To Do';
+    msg.style.display = '';
+    ci.focus();
+    ci.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    return;
+  }
+  task.status    = 'todo';
   task.updatedAt = Date.now();
   dbUpdateTask(task).catch(e => console.error('moveBack:', e));
   renderBoard();
