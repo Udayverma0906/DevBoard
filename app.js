@@ -633,6 +633,14 @@ function buildCard(task, colIdx) {
   keyEl.textContent = task.key;
   top.append(keyEl);
 
+  if (task.comments?.length > 0) {
+    const badge = document.createElement('span');
+    badge.className = 'card-comment-badge';
+    badge.textContent = task.comments.length;
+    badge.title = `${task.comments.length} comment${task.comments.length > 1 ? 's' : ''}`;
+    top.appendChild(badge);
+  }
+
   if (task.status !== 'done') {
     const del = document.createElement('button');
     del.className = 'card-del';
