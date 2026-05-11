@@ -330,12 +330,113 @@ html, body {
   padding: 0 20px;
   border-bottom: 1px solid var(--border);
   background: var(--bg);
+  gap: 20px;
 }
 
 .topbar-left {
   display: flex;
   align-items: center;
   gap: 10px;
+}
+
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-lo);
+}
+
+.breadcrumb-sep {
+  color: var(--text-dim);
+  font-size: 0.8rem;
+}
+
+.breadcrumb-item {
+  background: transparent;
+  border: none;
+  color: var(--text-lo);
+  font-size: 0.85rem;
+  padding: 4px 8px;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.12s;
+  font-weight: 500;
+}
+
+.breadcrumb-item:hover {
+  color: var(--blue);
+  background: rgba(87,157,255,0.1);
+}
+
+.topbar-center {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  max-width: 400px;
+}
+
+.search-box {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 6px 10px 6px 30px;
+  font-size: 0.85rem;
+  border-radius: 4px;
+  border: 1px solid var(--border-md);
+  background: rgba(87,157,255,0.08);
+  color: var(--text);
+  font-family: inherit;
+  outline: none;
+  transition: all 0.15s;
+}
+
+.search-input::placeholder {
+  color: var(--text-dim);
+}
+
+.search-input:focus {
+  border-color: var(--blue);
+  background: rgba(87,157,255,0.12);
+  box-shadow: 0 0 0 2px rgba(87,157,255,0.1);
+}
+
+.search-icon {
+  position: absolute;
+  left: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  pointer-events: none;
+}
+
+.topbar-right {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.btn-icon {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--text-lo);
+  font-size: 1rem;
+  padding: 6px 8px;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.12s;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.btn-icon:hover {
+  background: rgba(87,157,255,0.1);
+  border-color: var(--blue);
+  color: var(--blue);
 }
 
 .hamburger {
@@ -1755,11 +1856,14 @@ html, body {
 
   .hamburger { display: flex; }
 
-  /* declutter topbar */
+  /* declutter topbar on mobile */
   .chip-sub { display: none; }
-  .topbar   { padding: 0 12px; }
-
-  /* stack columns vertically — no horizontal scroll */
+  .topbar   { padding: 0 12px; gap: 8px; }
+  .topbar-center { max-width: 150px; }
+  .search-input { font-size: 0.8rem; }
+  .breadcrumb { display: none !important; }
+  .btn-icon { font-size: 0.9rem; padding: 5px 6px; }
+  .btn-create { padding: 6px 10px; font-size: 0.8rem; }
   .board-wrap {
     padding: 12px;
     overflow-y: auto;

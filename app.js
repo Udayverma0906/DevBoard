@@ -414,6 +414,8 @@ function showView(view) {
   activeView = view;
   const boardWrap = document.getElementById('boardWrap');
   const chipSub   = document.getElementById('chipSub');
+  const breadcrumb = document.getElementById('breadcrumb');
+  const viewToggle = document.getElementById('viewToggle');
 
   if (view === 'overview') {
     boardWrap.style.display = 'none';
@@ -423,10 +425,18 @@ function showView(view) {
     document.getElementById('chipIcon').style.background = 'var(--blue-dark)';
     document.getElementById('chipName').textContent       = 'Overview';
     if (chipSub) chipSub.textContent = 'Dashboard';
+    if (breadcrumb) {
+      viewToggle.textContent = 'Dashboard';
+      breadcrumb.style.display = 'flex';
+    }
   } else {
     boardWrap.style.display = '';
     if (dashboard) dashboard.hide();
     if (chipSub) chipSub.textContent = 'Board';
+    if (breadcrumb) {
+      viewToggle.textContent = 'Board';
+      breadcrumb.style.display = 'flex';
+    }
     renderBoard();
   }
   renderSidebar();
@@ -541,7 +551,7 @@ function renderSidebar() {
 
 // ── Render: board ──────────────────────────────────────
 
-function renderBoard() {
+function renderBoard(filteredTasks = null) {
   const board     = document.getElementById('board');
   const chipIcon  = document.getElementById('chipIcon');
   const chipName  = document.getElementById('chipName');
@@ -570,10 +580,13 @@ function renderBoard() {
   board.innerHTML = '';
   const frag = document.createDocumentFragment();
 
+  // Use filtered tasks if provided, otherwise use all tasks
+  const tasksToDisplay = filteredTasks || p.tasks;
+
   COLS.forEach(col => {
-    frag.appendChild(buildColumn(col, p.tasks.filter(t => t.status === col.id)));
+    frag.appendChild(buildColumn(col, tasksToDisplay.filter(t => t.status === col.id)));
   });
-  frag.appendChild(buildColumn(DISCARD_COL, p.tasks.filter(t => t.status === 'discard')));
+  frag.appendChild(buildColumn(DISCARD_COL, tasksToDisplay.filter(t => t.status === 'discard')));
 
   board.appendChild(frag);
 }
@@ -1375,4 +1388,52 @@ document.getElementById('board').addEventListener('click', e => {
   } else if (action === 'open-detail') {
     openDetail(taskId);
   }
+});
+
+// ── Topbar interactions ────────────────────────────
+
+document.getElementById('viewToggle').addEventListener('click', () => {
+  const newView = activeView === 'overview' ? 'board' : 'overview';
+  const p = getActive();
+  if (newView === 'board' && !p) {
+    const first = projects.find(p => p.id !== null);
+    if (first) activeId = first.id;
+  }
+  showView(newView);
+});
+
+// Search functionality
+let searchTimeout;
+document.getElementById('searchInput').addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  clearTimeout(searchTimeout);
+
+  if (!query) {
+    renderBoard();
+    return;
+  }
+
+  searchTimeout = setTimeout(() => {
+    const p = getActive();
+    if (!p) return;
+
+    const filtered = p.tasks.filter(t =>
+      t.text.toLowerCase().includes(query) ||
+      t.key.toLowerCase().includes(query) ||
+      t.description?.toLowerCase().includes(query)
+    );
+
+    renderBoard(filtered);
+  }, 200);
+});
+
+// Filter button
+document.getElementById('filterBtn').addEventListener('click', () => {
+  confirmPopup.ask({
+    title: 'Filter & Sort',
+    message: 'Search feature is active. Type in the search box to filter tasks by title, key, or description.',
+    okLabel: 'Got it',
+    okClass: 'btn-primary',
+    onConfirm: () => document.getElementById('searchInput').focus(),
+  });
 });
