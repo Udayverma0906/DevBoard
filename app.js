@@ -406,6 +406,8 @@ function removeProject(id) {
 
 function setActive(id) {
   activeId = id;
+  const si = document.getElementById('searchInput');
+  if (si) si.value = '';
   showView('board');
   closeSidebar();
 }
@@ -417,6 +419,7 @@ function showView(view) {
   const breadcrumb = document.getElementById('breadcrumb');
   const viewToggle = document.getElementById('viewToggle');
 
+  const searchBox = document.getElementById('searchInput');
   if (view === 'overview') {
     boardWrap.style.display = 'none';
     if (dashboard) { dashboard.show(); dashboard.refresh(computeDashData()); }
@@ -425,6 +428,7 @@ function showView(view) {
     document.getElementById('chipIcon').style.background = 'var(--blue-dark)';
     document.getElementById('chipName').textContent       = 'Overview';
     if (chipSub) chipSub.textContent = 'Dashboard';
+    if (searchBox) { searchBox.value = ''; searchBox.closest('.search-box').style.visibility = 'hidden'; }
     if (breadcrumb) {
       viewToggle.textContent = 'Dashboard';
       breadcrumb.style.display = 'flex';
@@ -433,6 +437,7 @@ function showView(view) {
     boardWrap.style.display = '';
     if (dashboard) dashboard.hide();
     if (chipSub) chipSub.textContent = 'Board';
+    if (searchBox) searchBox.closest('.search-box').style.visibility = '';
     if (breadcrumb) {
       viewToggle.textContent = 'Board';
       breadcrumb.style.display = 'flex';
@@ -581,7 +586,7 @@ function renderBoard(filteredTasks = null) {
   const frag = document.createDocumentFragment();
 
   // Use filtered tasks if provided, otherwise use all tasks
-  const tasksToDisplay = filteredTasks || p.tasks;
+  const tasksToDisplay = filteredTasks ?? p.tasks;
 
   const total = tasksToDisplay.length;
   COLS.forEach(col => {
@@ -682,15 +687,28 @@ function buildCard(task, colIdx) {
     top.appendChild(badge);
   }
 
+  const actions = document.createElement('div');
+  actions.className = 'card-actions';
+
+  const openBtn = document.createElement('button');
+  openBtn.className = 'card-action-btn card-action-open';
+  openBtn.innerHTML = '&#9998;';
+  openBtn.title = 'Edit issue';
+  openBtn.dataset.action = 'open-detail';
+  openBtn.dataset.taskId = task.id;
+  actions.appendChild(openBtn);
+
   if (task.status !== 'done') {
     const del = document.createElement('button');
-    del.className = 'card-del';
+    del.className = 'card-action-btn card-action-del';
     del.textContent = '✕';
     del.title = 'Delete issue';
     del.dataset.action = 'delete-issue';
     del.dataset.taskId = task.id;
-    top.appendChild(del);
+    actions.appendChild(del);
   }
+
+  top.appendChild(actions);
 
   const summary = document.createElement('div');
   summary.className = 'issue-summary';
@@ -1420,7 +1438,7 @@ document.getElementById('board').addEventListener('click', e => {
 
 // ── Topbar interactions ────────────────────────────
 
-document.getElementById('viewToggle').addEventListener('click', () => {
+document.getElementById('viewToggle')?.addEventListener('click', () => {
   const newView = activeView === 'overview' ? 'board' : 'overview';
   const p = getActive();
   if (newView === 'board' && !p) {
@@ -1430,38 +1448,16 @@ document.getElementById('viewToggle').addEventListener('click', () => {
   showView(newView);
 });
 
-// Search functionality
-let searchTimeout;
-document.getElementById('searchInput').addEventListener('input', (e) => {
+// ── Search ─────────────────────────────────────────────
+document.getElementById('searchInput').addEventListener('input', e => {
   const query = e.target.value.toLowerCase().trim();
-  clearTimeout(searchTimeout);
-
-  if (!query) {
-    renderBoard();
-    return;
-  }
-
-  searchTimeout = setTimeout(() => {
-    const p = getActive();
-    if (!p) return;
-
-    const filtered = p.tasks.filter(t =>
-      t.text.toLowerCase().includes(query) ||
-      t.key.toLowerCase().includes(query) ||
-      t.description?.toLowerCase().includes(query)
-    );
-
-    renderBoard(filtered);
-  }, 200);
+  const p = getActive();
+  if (!p) return;
+  if (!query) { renderBoard(); return; }
+  renderBoard(p.tasks.filter(t =>
+    t.text.toLowerCase().includes(query) ||
+    t.key.toLowerCase().includes(query) ||
+    (t.description ?? '').toLowerCase().includes(query)
+  ));
 });
 
-// Filter button
-document.getElementById('filterBtn').addEventListener('click', () => {
-  confirmPopup.ask({
-    title: 'Filter & Sort',
-    message: 'Search feature is active. Type in the search box to filter tasks by title, key, or description.',
-    okLabel: 'Got it',
-    okClass: 'btn-primary',
-    onConfirm: () => document.getElementById('searchInput').focus(),
-  });
-});

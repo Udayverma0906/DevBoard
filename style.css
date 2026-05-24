@@ -717,7 +717,6 @@ html, body {
   font-size: 0.65rem;
   font-weight: 700;
   flex-shrink: 0;
-  margin-left: auto;
 }
 
 .issue-key {
@@ -727,20 +726,47 @@ html, body {
   font-weight: 500;
 }
 
-.card-del {
+.card-actions {
+  display: flex;
+  gap: 4px;
+  margin-left: auto;
+  flex-shrink: 0;
   opacity: 0;
-  background: transparent;
-  border: none;
-  color: var(--text-lo);
-  font-size: 0.7rem;
-  padding: 2px 5px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: opacity 0.12s, color 0.12s, background 0.12s;
+  transform: translateX(6px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
+}
+.issue-card:hover .card-actions {
+  opacity: 1;
+  transform: translateX(0);
 }
 
-.issue-card:hover .card-del { opacity: 1; }
-.card-del:hover { color: var(--p-high) !important; background: rgba(226,72,61,0.14); }
+.card-action-btn {
+  background: rgba(255,255,255,0.07);
+  border: 1px solid rgba(166,197,226,0.18);
+  border-radius: 5px;
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.72rem;
+  cursor: pointer;
+  color: var(--text-lo);
+  padding: 0;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
+}
+.card-action-btn:hover { transform: scale(1.12); }
+
+.card-action-open:hover {
+  background: rgba(87,157,255,0.18);
+  border-color: rgba(87,157,255,0.4);
+  color: var(--blue);
+}
+.card-action-del:hover {
+  background: rgba(226,72,61,0.18);
+  border-color: rgba(226,72,61,0.4);
+  color: var(--p-high);
+}
 
 .issue-summary {
   font-size: 0.92rem;
@@ -876,39 +902,50 @@ html, body {
   flex-wrap: wrap;
   justify-content: flex-end;
   opacity: 0;
-  transition: opacity 0.12s;
+  transform: translateY(4px);
+  transition: opacity 0.18s ease, transform 0.18s ease;
 }
 
-.issue-card:hover .move-arrows { opacity: 1; }
+.issue-card:hover .move-arrows {
+  opacity: 1;
+  transform: translateY(0);
+}
 
 .arrow-btn {
-  background: rgba(255,255,255,0.10);
-  border: none;
-  color: var(--text);
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  border-radius: 4px;
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(166,197,226,0.12);
+  color: var(--text-lo);
+  font-size: 0.72rem;
+  padding: 3px 9px;
+  border-radius: 5px;
   cursor: pointer;
-  transition: background 0.12s, color 0.12s;
+  transition: background 0.15s, color 0.15s, border-color 0.15s, transform 0.15s;
 }
-
-.arrow-btn:hover { background: var(--blue-dim); color: var(--blue); }
+.arrow-btn:hover {
+  background: var(--blue-dim);
+  border-color: rgba(87,157,255,0.3);
+  color: var(--blue);
+  transform: scale(1.05);
+}
 
 .arrow-btn.discard-btn {
   color: var(--text-dim);
-  background: rgba(255,255,255,0.05);
+  background: rgba(255,255,255,0.04);
 }
 .arrow-btn.discard-btn:hover {
   background: rgba(226,72,61,0.12);
+  border-color: rgba(226,72,61,0.3);
   color: var(--p-high);
 }
 
 .arrow-btn.restore-btn {
   color: var(--c-prog);
   background: rgba(87,157,255,0.08);
+  border-color: rgba(87,157,255,0.2);
 }
 .arrow-btn.restore-btn:hover {
   background: rgba(87,157,255,0.18);
+  border-color: rgba(87,157,255,0.4);
   color: var(--blue);
 }
 
@@ -1969,8 +2006,9 @@ html, body {
 
 /* Always-visible controls + larger tap targets on touch */
 @media (hover: none) {
-  .nav-del     { opacity: 1; }
-  .card-del    { opacity: 1; padding: 4px 8px; }
-  .move-arrows { opacity: 1; }
-  .arrow-btn   { padding: 5px 12px; }
+  .nav-del          { opacity: 1; }
+  .card-actions     { opacity: 1; transform: none; }
+  .card-action-btn  { width: 28px; height: 28px; font-size: 0.8rem; }
+  .move-arrows      { opacity: 1; transform: none; }
+  .arrow-btn        { padding: 5px 12px; }
 }
