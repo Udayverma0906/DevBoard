@@ -198,9 +198,14 @@ function buildUser(name) {
 
 function renderProfileUI() {
   document.getElementById('selfAvatar').textContent = currentUser.initials || '?';
+  const email = window._supaUser?.email || '';
   document.getElementById('userAvatar').textContent = currentUser.initials || '?';
-  document.getElementById('userName').textContent   = currentUser.name    || 'User';
-  document.getElementById('userEmail').textContent  = window._supaUser?.email || '';
+  const nameEl = document.getElementById('userName');
+  nameEl.textContent = currentUser.name || 'User';
+  nameEl.title = currentUser.name || '';
+  const emailEl = document.getElementById('userEmail');
+  emailEl.textContent = email;
+  emailEl.title = email;
 
   const banner = document.getElementById('profileBanner');
   if (banner) banner.style.display = 'none';
@@ -428,7 +433,7 @@ function showView(view) {
     document.getElementById('chipIcon').style.background = 'var(--blue-dark)';
     document.getElementById('chipName').textContent       = 'Overview';
     if (chipSub) chipSub.textContent = 'Dashboard';
-    if (searchBox) { searchBox.value = ''; searchBox.closest('.search-box').style.visibility = 'hidden'; }
+    if (searchBox) { searchBox.value = ''; searchBox.closest('.topbar-center').style.display = 'none'; }
     if (breadcrumb) {
       viewToggle.textContent = 'Dashboard';
       breadcrumb.style.display = 'flex';
@@ -437,7 +442,7 @@ function showView(view) {
     boardWrap.style.display = '';
     if (dashboard) dashboard.hide();
     if (chipSub) chipSub.textContent = 'Board';
-    if (searchBox) searchBox.closest('.search-box').style.visibility = '';
+    if (searchBox) searchBox.closest('.topbar-center').style.display = '';
     if (breadcrumb) {
       viewToggle.textContent = 'Board';
       breadcrumb.style.display = 'flex';
@@ -542,6 +547,7 @@ function renderSidebar() {
     const label = document.createElement('span');
     label.className = 'nav-proj-name';
     label.textContent = p.name;
+    item.title = p.name;
 
     const del = document.createElement('button');
     del.className = 'nav-del';
@@ -654,6 +660,13 @@ function buildColumn(col, tasks, totalTasks = 0) {
     const empty = document.createElement('div');
     empty.className = 'col-empty';
     empty.textContent = 'No issues';
+    if (!isDiscard) {
+      const addBtn = document.createElement('button');
+      addBtn.className = 'col-empty-add';
+      addBtn.textContent = '+ Add task';
+      addBtn.addEventListener('click', () => openModal(col.id));
+      empty.appendChild(addBtn);
+    }
     body.appendChild(empty);
   } else {
     tasks.forEach(task => body.appendChild(buildCard(task, colIdx)));
@@ -690,15 +703,15 @@ function buildCard(task, colIdx) {
   const actions = document.createElement('div');
   actions.className = 'card-actions';
 
-  const openBtn = document.createElement('button');
-  openBtn.className = 'card-action-btn card-action-open';
-  openBtn.innerHTML = '&#9998;';
-  openBtn.title = 'Edit issue';
-  openBtn.dataset.action = 'open-detail';
-  openBtn.dataset.taskId = task.id;
-  actions.appendChild(openBtn);
-
   if (task.status !== 'done') {
+    const openBtn = document.createElement('button');
+    openBtn.className = 'card-action-btn card-action-open';
+    openBtn.innerHTML = '&#9998;';
+    openBtn.title = 'Edit issue';
+    openBtn.dataset.action = 'open-detail';
+    openBtn.dataset.taskId = task.id;
+    actions.appendChild(openBtn);
+
     const del = document.createElement('button');
     del.className = 'card-action-btn card-action-del';
     del.textContent = '✕';
@@ -1446,6 +1459,30 @@ document.getElementById('viewToggle')?.addEventListener('click', () => {
     if (first) activeId = first.id;
   }
   showView(newView);
+});
+
+// ── Keyboard shortcuts ─────────────────────────────────
+document.addEventListener('keydown', e => {
+  const tag = document.activeElement?.tagName;
+  const inInput = tag === 'INPUT' || tag === 'TEXTAREA';
+
+  // Escape: close mobile sidebar
+  if (e.key === 'Escape') {
+    const sidebar = document.getElementById('sidebar');
+    if (sidebar?.classList.contains('open')) { closeSidebar(); return; }
+  }
+
+  // '/': focus search (board view only)
+  if (e.key === '/' && !inInput && activeView === 'board') {
+    e.preventDefault();
+    const si = document.getElementById('searchInput');
+    if (si) { si.focus(); si.select(); }
+  }
+
+  // 'c': open create modal (board view, no modifier)
+  if (e.key === 'c' && !inInput && !e.ctrlKey && !e.metaKey && activeView === 'board' && getActive()) {
+    openModal();
+  }
 });
 
 // ── Search ─────────────────────────────────────────────

@@ -55,6 +55,14 @@
 
 * { margin: 0; padding: 0; box-sizing: border-box; }
 
+/* Global keyboard focus ring */
+:focus-visible {
+  outline: 2px solid var(--blue);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+input:focus-visible, textarea:focus-visible { outline: none; }
+
 html, body {
   height: 100%;
   overflow: hidden;
@@ -327,7 +335,7 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0 20px;
+  padding: 0 max(20px, env(safe-area-inset-right, 0px)) 0 max(20px, env(safe-area-inset-left, 0px));
   border-bottom: 1px solid var(--border);
   background: var(--bg);
   gap: 20px;
@@ -479,6 +487,10 @@ html, body {
   font-size: 0.9rem;
   color: var(--text-hi);
   line-height: 1.2;
+  max-width: 180px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .chip-sub {
@@ -550,7 +562,8 @@ html, body {
 
 .col {
   flex-shrink: 0;
-  width: 24%;
+  width: 290px;
+  min-width: 290px;
   display: flex;
   flex-direction: column;
   background: rgba(255,255,255,0.02);
@@ -656,8 +669,29 @@ html, body {
   color: var(--text-dim);
   font-size: 0.8rem;
   text-align: center;
-  padding: 20px 8px;
+  padding: 20px 8px 8px;
   flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.col-empty-add {
+  background: none;
+  border: 1px dashed rgba(166,197,226,0.2);
+  color: var(--text-dim);
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 0.78rem;
+  cursor: pointer;
+  width: 100%;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.col-empty-add:hover {
+  border-color: var(--blue);
+  color: var(--blue);
+  background: rgba(87,157,255,0.06);
 }
 
 
@@ -1939,6 +1973,8 @@ html, body {
     transform: translateX(-100%);
     transition: transform 0.25s ease;
     box-shadow: none;
+    /* full-height including notch */
+    padding-top: env(safe-area-inset-top, 0px);
   }
 
   .sidebar.open {
@@ -1950,12 +1986,17 @@ html, body {
 
   /* declutter topbar on mobile */
   .chip-sub { display: none; }
+  .chip-name { max-width: 120px; }
   .topbar   { padding: 0 12px; gap: 8px; }
-  .topbar-center { max-width: 150px; }
+  .topbar-center { max-width: 140px; }
   .search-input { font-size: 0.8rem; }
   .breadcrumb { display: none !important; }
-  .btn-icon { font-size: 0.9rem; padding: 5px 6px; }
   .btn-create { padding: 6px 10px; font-size: 0.8rem; }
+
+  /* larger nav tap targets */
+  .nav-item { padding: 10px 14px; min-height: 44px; }
+  .nav-del  { min-width: 32px; min-height: 32px; display: flex; align-items: center; justify-content: center; }
+
   .board-wrap {
     padding: 12px;
     overflow-y: auto;
@@ -1971,31 +2012,28 @@ html, body {
 
   .col {
     width: 100%;
+    min-width: 0;
     max-height: none;
   }
 
-  .col-body {
-    overflow-y: visible;
-  }
+  .col-body { overflow-y: visible; }
 
   /* modal scrolls on short viewports */
-  .modal {
-    max-height: 90dvh;
-    overflow-y: auto;
-  }
+  .modal { max-height: 90dvh; overflow-y: auto; }
+  .modal-wide { width: 100%; max-height: 90dvh; }
 
-  .modal-wide {
-    width: 100%;
-    max-height: 90dvh;
-  }
+  /* modal footer always visible */
+  .modal-foot { position: sticky; bottom: 0; background: var(--modal-bg); z-index: 1; }
 }
 
 @media (max-width: 480px) {
-  .topbar     { padding: 0 10px; }
-  .btn-create { padding: 6px 10px; font-size: 0.8rem; }
+  .topbar        { padding: 0 10px; }
+  .btn-create    { padding: 6px 10px; font-size: 0.8rem; }
+  .topbar-center { max-width: 110px; }
 
   /* prevent iOS input zoom */
   .modal-body input,
+  .modal-body textarea,
   .new-project-form input { font-size: 16px; }
 
   /* respect iPhone home-indicator */
@@ -2008,7 +2046,10 @@ html, body {
 @media (hover: none) {
   .nav-del          { opacity: 1; }
   .card-actions     { opacity: 1; transform: none; }
-  .card-action-btn  { width: 28px; height: 28px; font-size: 0.8rem; }
+  .card-action-btn  { width: 32px; height: 32px; font-size: 0.85rem; }
   .move-arrows      { opacity: 1; transform: none; }
-  .arrow-btn        { padding: 5px 12px; }
+  .arrow-btn        { padding: 6px 14px; min-height: 36px; }
+  .col-add-btn      { width: 28px; height: 28px; }
+  /* dashed add button always visible on touch */
+  .col-empty-add    { border-style: solid; border-color: var(--border); }
 }
