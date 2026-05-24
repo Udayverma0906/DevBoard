@@ -561,11 +561,17 @@ html, body {
 
 .col-head {
   display: flex;
-  align-items: center;
-  gap: 7px;
-  padding: 10px 12px 9px;
+  flex-direction: column;
+  gap: 5px;
+  padding: 10px 12px 8px;
   flex-shrink: 0;
   border-bottom: 1px solid var(--border);
+}
+
+.col-head-top {
+  display: flex;
+  align-items: center;
+  gap: 7px;
 }
 
 .col-dot {
@@ -590,11 +596,44 @@ html, body {
 }
 
 .col-count {
-  font-size: 0.7rem;
-  color: var(--text-lo);
-  background: rgba(255,255,255,0.10);
+  font-size: 0.68rem;
+  font-weight: 600;
   padding: 1px 7px;
   border-radius: 10px;
+  min-width: 20px;
+  text-align: center;
+}
+.col-count-todo     { color: var(--c-todo);    background: rgba(133,144,162,0.15); }
+.col-count-progress { color: var(--c-prog);    background: rgba(87,157,255,0.15); }
+.col-count-done     { color: var(--c-done);    background: rgba(34,160,107,0.15); }
+.col-count-discard  { color: var(--text-dim);  background: rgba(255,255,255,0.07); }
+
+.col-add-btn {
+  background: none;
+  border: 1px solid var(--border);
+  color: var(--text-dim);
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  font-size: 1rem;
+  line-height: 1;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+}
+.col-add-btn:hover {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
+
+.col-stats {
+  font-size: 0.65rem;
+  color: var(--text-dim);
+  padding-left: 15px;
 }
 
 .col-body {

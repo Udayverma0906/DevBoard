@@ -583,16 +583,18 @@ function renderBoard(filteredTasks = null) {
   // Use filtered tasks if provided, otherwise use all tasks
   const tasksToDisplay = filteredTasks || p.tasks;
 
+  const total = tasksToDisplay.length;
   COLS.forEach(col => {
-    frag.appendChild(buildColumn(col, tasksToDisplay.filter(t => t.status === col.id)));
+    frag.appendChild(buildColumn(col, tasksToDisplay.filter(t => t.status === col.id), total));
   });
-  frag.appendChild(buildColumn(DISCARD_COL, tasksToDisplay.filter(t => t.status === 'discard')));
+  frag.appendChild(buildColumn(DISCARD_COL, tasksToDisplay.filter(t => t.status === 'discard'), total));
 
   board.appendChild(frag);
 }
 
-function buildColumn(col, tasks) {
-  const colIdx = COLS.findIndex(c => c.id === col.id);
+function buildColumn(col, tasks, totalTasks = 0) {
+  const colIdx    = COLS.findIndex(c => c.id === col.id);
+  const isDiscard = col.id === 'discard';
 
   const el = document.createElement('div');
   el.className = 'col';
@@ -600,6 +602,10 @@ function buildColumn(col, tasks) {
 
   const head = document.createElement('div');
   head.className = 'col-head';
+
+  // ── top row ──
+  const headTop = document.createElement('div');
+  headTop.className = 'col-head-top';
 
   const dot = document.createElement('span');
   dot.className = `col-dot ${col.cls}`;
@@ -609,10 +615,32 @@ function buildColumn(col, tasks) {
   title.textContent = col.label;
 
   const count = document.createElement('span');
-  count.className = 'col-count';
+  count.className = `col-count col-count-${col.cls}`;
   count.textContent = tasks.length;
 
-  head.append(dot, title, count);
+  headTop.append(dot, title, count);
+
+  if (!isDiscard) {
+    const addBtn = document.createElement('button');
+    addBtn.className = 'col-add-btn';
+    addBtn.title = `Add task to ${col.label}`;
+    addBtn.textContent = '+';
+    addBtn.addEventListener('click', e => { e.stopPropagation(); openModal(col.id); });
+    headTop.appendChild(addBtn);
+  }
+
+  head.appendChild(headTop);
+
+  // ── stats row ──
+  const stats = document.createElement('div');
+  stats.className = 'col-stats';
+  if (isDiscard) {
+    stats.textContent = tasks.length === 0 ? 'None discarded' : `${tasks.length} discarded`;
+  } else {
+    const pct = totalTasks > 0 ? Math.round((tasks.length / totalTasks) * 100) : 0;
+    stats.textContent = `${tasks.length} task${tasks.length !== 1 ? 's' : ''} · ${pct}% of board`;
+  }
+  head.appendChild(stats);
 
   const body = document.createElement('div');
   body.className = 'col-body';
