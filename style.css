@@ -6,8 +6,8 @@
   /* surfaces */
   --bg:         #1D2125;
   --sidebar-bg: #161A1D;
-  --card:       #22272B;
-  --card-hover: #282E33;
+  --card:       #252B30;
+  --card-hover: #2D363E;
   --modal-bg:   #282E33;
 
   /* borders */
@@ -670,34 +670,38 @@ html, body {
 
 .issue-card {
   background: var(--card);
-  border-radius: 6px;
-  padding: 12px 14px;
+  border-radius: 8px;
+  padding: 14px 16px;
   border: 1px solid var(--border);
   border-left: 3px solid var(--border-md);
-  box-shadow: var(--sh-card);
+  box-shadow: 0 1px 3px rgba(9,30,66,0.35), 0 0 0 1px rgba(9,30,66,0.06);
   animation: slideIn 0.14s ease;
-  transition: all 0.15s ease;
+  transition: box-shadow 0.18s ease, transform 0.18s ease, background 0.18s ease, border-color 0.18s ease;
   position: relative;
   cursor: pointer;
 }
 
 .issue-card:hover {
-  border-color: var(--border-md);
   background: var(--card-hover);
-  box-shadow: 0 4px 16px rgba(9,30,66,0.5), 0 0 0 1px rgba(87,157,255,0.2);
-  transform: translateY(-1px);
+  border-color: rgba(166,197,226,0.28);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(9,30,66,0.55), 0 0 0 1px rgba(87,157,255,0.3);
 }
 
-/* Priority left border */
+/* Priority left border + priority-tinted hover glow */
 .issue-card.pri-high   { border-left-color: var(--p-high); }
 .issue-card.pri-medium { border-left-color: var(--p-med);  }
 .issue-card.pri-low    { border-left-color: var(--p-low);  }
+
+.issue-card.pri-high:hover   { box-shadow: 0 6px 20px rgba(9,30,66,0.55), 0 0 0 1px rgba(226,72,61,0.4);  }
+.issue-card.pri-medium:hover { box-shadow: 0 6px 20px rgba(9,30,66,0.55), 0 0 0 1px rgba(226,178,3,0.4);  }
+.issue-card.pri-low:hover    { box-shadow: 0 6px 20px rgba(9,30,66,0.55), 0 0 0 1px rgba(87,157,255,0.4); }
 
 .card-top {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 10px;
   gap: 6px;
 }
 
@@ -742,8 +746,8 @@ html, body {
   font-size: 0.92rem;
   font-weight: 600;
   color: var(--text-hi);
-  line-height: 1.4;
-  margin-bottom: 8px;
+  line-height: 1.45;
+  margin-bottom: 10px;
   word-break: break-word;
   letter-spacing: -0.3px;
 }
@@ -756,20 +760,32 @@ html, body {
   word-break: break-word;
 }
 
-.issue-card.status-discard {
-  opacity: 0.55;
-  border-color: rgba(255,255,255,0.07);
+.issue-card.status-done {
+  background: rgba(34,160,107,0.05);
+  border-color: rgba(34,160,107,0.2);
+  border-left-color: var(--c-done);
+}
+.issue-card.status-done:hover {
+  background: rgba(34,160,107,0.09);
+  box-shadow: 0 6px 20px rgba(9,30,66,0.55), 0 0 0 1px rgba(34,160,107,0.35);
+}
+.issue-card.status-done .issue-summary {
+  color: var(--text-lo);
+  text-decoration: line-through;
+  text-decoration-color: rgba(34,160,107,0.5);
 }
 
+.issue-card.status-discard {
+  opacity: 0.45;
+  background: rgba(255,255,255,0.01);
+  border-color: rgba(255,255,255,0.06);
+  border-left-color: var(--c-discard);
+}
+.issue-card.status-discard:hover { opacity: 0.65; }
 .issue-card.status-discard .issue-summary {
   color: var(--text-dim);
   text-decoration: line-through;
   text-decoration-color: var(--c-discard);
-}
-
-.issue-card.status-done .issue-summary {
-  color: var(--text-lo);
-  text-decoration: line-through;
 }
 
 .card-dates {
@@ -813,9 +829,9 @@ html, body {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: 8px;
-  border-top: 1px solid rgba(166,197,226,0.08);
-  margin-top: 2px;
+  padding-top: 10px;
+  border-top: 1px solid rgba(166,197,226,0.12);
+  margin-top: 4px;
 }
 
 .pri-tag {
